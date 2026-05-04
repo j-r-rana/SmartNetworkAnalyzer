@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html>
+<head>
+<title>JagguNet Pro</title>
+<link rel="stylesheet" href="/static/style.css">
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+</head>
+<body>
+
+<div class="container">
+
+<h1>⚡ JagguNet Pro</h1>
+<p class="sub">AI Powered Smart Network Analyzer</p>
+
+<button onclick="analyze()">🚀 Analyze Network</button>
+
+<div class="grid">
+
+<div class="card"><h3>Ping</h3><p id="ping">-- ms</p></div>
+
+<div class="card"><h3>Packet Loss</h3><p id="loss">-- %</p></div>
+
+<div class="card"><h3>Health Score</h3><p id="health">-- /100</p></div>
+
+<div class="card"><h3>AI Prediction</h3><p id="status">--</p></div>
+
+<div class="card"><h3>Confidence</h3><p id="confidence">-- %</p></div>
+
+<div class="card"><h3>Total Scans</h3><p id="total">--</p></div>
+
+<div class="card"><h3>Average Ping</h3><p id="avg">-- ms</p></div>
+
+<div class="card"><h3>Best Ping</h3><p id="best">-- ms</p></div>
+
+</div>
+
+<div class="card big">
+<h3>AI Insight</h3>
+<p id="insight">Waiting for history analysis...</p>
+</div>
+
+<div class="card big">
+<h3>Smart Suggestion</h3>
+<p id="suggestion">Click Analyze to start.</p>
+</div>
+
+<div class="card big">
+<h3>Latency Trend</h3>
+<canvas id="myChart"></canvas>
+</div>
+
+<div class="card big">
+<h3>Recent Scan History</h3>
+<div id="historyCards" class="history-wrap"></div>
+</div>
+
+</div>
+
+<script>
+
+let labels = [];
+let values = [];
+let count = 0;
+
+const ctx = document.getElementById("myChart");
+
+const chart = new Chart(ctx,{
+type:'line',
+data:{
+labels:labels,
+datasets:[{
+label:'Latency (ms)',
+data:values,
+borderWidth:3,
+tension:0.3
+}]
+},
+options:{responsive:true}
+});
+
+function analyze(){
+
+fetch('/analyze')
+.then(res => res.json())
+.then(data => {
+
+document.getElementById("ping").innerText = data.latency + " ms";
+document.getElementById("loss").innerText = data.packet_loss + " %";
+document.getElementById("health").innerText = data.health + " /100";
+document.getElementById("status").innerText = data.status;
+document.getElementById("confidence").innerText = data.confidence + " %";
+document.getElementById("total").innerText = data.total_scans;
+document.getElementById("avg").innerText = data.avg_ping + " ms";
+document.getElementById("best").innerText = data.best_ping + " ms";
+document.getElementById("insight").innerText = data.insight;
+document.getElementById("suggestion").innerText = data.suggestion;
+
+count++;
+labels.push("Scan " + count);
+values.push(data.latency);
+chart.update();
+
+let color = "#00ff99";
+
+if(data.status == "Slow"){
+color = "#ffd000";
+}
+else if(data.status == "No Internet"){
+color = "#ff4d4d";
+}
+else if(data.status == "Congestion"){
+color = "#ff884d";
+}
+
+let card = document.createElement("div");
+
+card.className = "mini-card";
+
+card.innerHTML = `
+<div style="color:${color};font-weight:bold;">
+● ${data.time}
+</div>
+<div>Ping: ${data.latency} ms</div>
+<div>Status: ${data.status}</div>
+<div>Confidence: ${data.confidence}%</div>
+`;
+
+let wrap = document.getElementById("historyCards");
+
+wrap.prepend(card);
+
+if(wrap.children.length > 5){
+wrap.removeChild(wrap.lastChild);
+}
+
+});
+}
+
+</script>
+
+</body>
+</html>
